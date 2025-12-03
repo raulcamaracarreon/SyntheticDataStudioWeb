@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">SDV – Aprender desde CSV</h2>
+
+<div class="card mb-3">
+  <div class="card-header">Entrenar modelo desde un CSV</div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('sdv_fit') }}" enctype="multipart/form-data" class="vstack gap-2">
+      <div>
+        <label class="form-label">Archivo CSV</label>
+        <input class="form-control" type="file" name="file" accept=".csv" required>
+      </div>
+      <button class="btn btn-primary">Entrenar</button>
+    </form>
+  </div>
+</div>
+
+{% if has_model %}
+<div class="alert alert-success">
+  Modelo disponible (ID: <code>{{ model_id }}</code>).
+  <a href="{{ url_for('sdv_preview', model_id=model_id) }}" class="alert-link">Previsualizar</a> ·
+  <a href="{{ url_for('sdv_sample', model_id=model_id, n=1000) }}" class="alert-link">Descargar 1000</a> ·
+  <a href="{{ url_for('sdv_export_metadata', model_id=model_id) }}" class="alert-link">Exportar metadatos</a>
+</div>
+{% endif %}
+{% endblock %}

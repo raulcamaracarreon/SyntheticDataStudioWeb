@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <title>Synthetic Data Studio (Web)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+
+    /* Encabezados centrados */
+  .table thead th,
+  .table thead td,
+  table.dataframe thead th,
+  table.dataframe thead td {
+    text-align: center !important;
+    vertical-align: middle !important;
+  }
+
+  /* (opcional) centra también los encabezados de índices de pandas */
+  table.dataframe thead tr th:first-child {
+    text-align: center !important;
+  }
+
+  /* Centrar TODO: encabezados y celdas (Bootstrap + pandas) */
+  .table thead th,
+  .table thead td,
+  .table tbody th,
+  .table tbody td,
+  .table tfoot th,
+  .table tfoot td,
+  table.dataframe thead th,
+  table.dataframe thead td,
+  table.dataframe tbody th,
+  table.dataframe tbody td,
+  table.dataframe tfoot th,
+  table.dataframe tfoot td {
+    text-align: center !important;
+    vertical-align: middle !important;
+  }
+
+
+    /* ========= VARIABLES DE TEMA ========= */
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --text: #1d232a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #0ea5e9;
+      --card-radius: 14px;
+      --border-strong: #d1d5db;  /* usado en tablas */
+    }
+    html[data-theme="dark"] {
+      --bg: #0f172a;
+      --surface: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --primary: #38bdf8;
+      --border-strong: #334155;
+    }
+
+    /* ========= BASE ========= */
+    body { background: var(--bg); color: var(--text); }
+    .card, .navbar, .alert, .modal-content, .table {
+      background: var(--surface) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+      border-radius: var(--card-radius);
+    }
+    .card-header, .table thead th {
+      background: color-mix(in srgb, var(--surface) 80%, var(--border)) !important;
+      border-bottom-color: var(--border) !important;
+    }
+    a, .btn-link { color: var(--primary); }
+    .btn-primary { background: var(--primary); border-color: var(--primary); }
+    .text-muted { color: var(--muted) !important; }
+    hr { border-color: var(--border); }
+    img { background: var(--surface); } /* que no queden con fondo oscuro */
+
+    /* ========= TABLAS MEJORADAS ========= */
+    .table, .table * { border-color: var(--border-strong) !important; }
+    .table thead th, .table thead td {
+      color: var(--text) !important;
+      background: color-mix(in srgb, var(--surface) 78%, var(--border)) !important;
+      border-bottom: 1px solid var(--border-strong) !important;
+    }
+    .table tbody td, .table tbody th {
+      color: var(--text) !important;
+      background: var(--surface) !important;
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: color-mix(in srgb, var(--surface) 90%, var(--border)) !important;
+    }
+
+    /* Dark: celdas “negras”, texto claro y bordes marcados */
+    html[data-theme="dark"] .table tbody tr td,
+    html[data-theme="dark"] .table tbody tr th {
+      background-color: #0b1220 !important;
+      color: #e5e7eb !important;
+    }
+    html[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+      background-color: #0e1729 !important;
+    }
+    html[data-theme="dark"] .table-hover tbody tr:hover {
+      background-color: #162036 !important;
+    }
+    html[data-theme="dark"] .table,
+    html[data-theme="dark"] .table td,
+    html[data-theme="dark"] .table th {
+      border-color: #263041 !important;
+    }
+    /* DataFrames de pandas */
+    table.dataframe { width: 100%; }
+    html[data-theme="dark"] table.dataframe td,
+    html[data-theme="dark"] table.dataframe th {
+      background-color: #0b1220 !important;
+      color: #e5e7eb !important;
+      border: 1px solid #263041 !important;
+    }
+
+    /* ========= SWITCH NEUMÓRFICO ========= */
+    .theme-switch { display: inline-flex; align-items: center; gap: 10px; user-select: none; }
+    .theme-toggle {
+      width: 68px; height: 32px; border-radius: 999px;
+      background: color-mix(in srgb, var(--surface) 90%, #000 10%);
+      border: 1px solid var(--border);
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,.08), inset -2px -2px 4px rgba(255,255,255,.3);
+      position: relative; cursor: pointer;
+    }
+    .theme-toggle .knob {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      left: 4px; width: 26px; height: 26px; border-radius: 50%;
+      background: var(--surface);
+      box-shadow: 2px 2px 6px rgba(0,0,0,.15), -2px -2px 6px rgba(255,255,255,.25);
+      transition: left .2s ease;
+      display: grid; place-items: center; font-size: 14px;
+    }
+    .theme-toggle.active .knob { left: 38px; }
+    .theme-label { font-size: 12px; color: var(--muted); }
+
+    /* Botón outline que cambia con el tema */
+    :root { --btn-contrast: #1f2937; }                   /* texto oscuro en light */
+    html[data-theme="dark"] { --btn-contrast: #e5e7eb; } /* texto claro en dark */
+
+    .btn-outline-contrast {
+      color: var(--btn-contrast) !important;
+      border-color: var(--btn-contrast) !important;
+      background: transparent !important;
+    }
+    .btn-outline-contrast:hover,
+    .btn-outline-contrast:focus {
+      background: var(--btn-contrast) !important;
+      color: var(--bg) !important;       /* usa el fondo del tema para contraste */
+      border-color: var(--btn-contrast) !important;
+    }
+
+        /* Arregla btn-outline-dark en modo oscuro (texto/borde claros, hover invertido) */
+    html[data-theme="dark"] .btn.btn-outline-dark {
+      color: #e5e7eb !important;        /* texto claro */
+      border-color: #e5e7eb !important; /* borde claro */
+      background: transparent !important;
+    }
+    html[data-theme="dark"] .btn.btn-outline-dark:hover,
+    html[data-theme="dark"] .btn.btn-outline-dark:focus {
+      background: #e5e7eb !important;   /* relleno claro al hover/focus */
+      color: #0f172a !important;         /* texto oscuro para contraste */
+      border-color: #e5e7eb !important;
+    }
+    html[data-theme="dark"] .btn.btn-outline-dark.disabled,
+    html[data-theme="dark"] .btn.btn-outline-dark:disabled {
+      color: #94a3b8 !important;         /* deshabilitado legible */
+      border-color: #334155 !important;
+      opacity: 0.7;
+    }
+
+  </style>
+
+  <script>
+    // ========= TEMA PERSISTENTE =========
+    (function () {
+      const saved = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      window.addEventListener('DOMContentLoaded', () => {
+        const toggle = document.getElementById('themeToggle');
+        const label  = document.getElementById('themeText');
+        if (!toggle || !label) return;
+
+        const isDark = (saved === 'dark');
+        toggle.classList.toggle('active', isDark);
+        toggle.setAttribute('aria-pressed', String(isDark));
+        label.textContent = isDark ? 'Dark' : 'Light';
+        toggle.querySelector('.knob').textContent = isDark ? '🌙' : '☀️';
+
+        toggle.addEventListener('click', () => {
+          const nowDark = !toggle.classList.contains('active');
+          toggle.classList.toggle('active', nowDark);
+          toggle.setAttribute('aria-pressed', String(nowDark));
+          const theme = nowDark ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('theme', theme);
+          label.textContent = nowDark ? 'Dark' : 'Light';
+          toggle.querySelector('.knob').textContent = nowDark ? '🌙' : '☀️';
+        });
+      });
+    })();
+  </script>
+</head>
+
+<body class="container py-4">
+  <!-- Header con título y switch -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="mb-0">Synthetic Data Studio (Web)</h1>
+    <div class="theme-switch">
+      <span class="theme-label" id="themeText">Light</span>
+      <button id="themeToggle" type="button" class="theme-toggle" aria-pressed="false" aria-label="Cambiar tema">
+        <span class="knob">☀️</span>
+      </button>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div>
+        {% for category, msg in messages %}
+          <div class="alert alert-{{category}}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  <script>
+    // Mostrar/ocultar parámetros según distribución
+    function onDistChange(sel) {
+      const val = sel.value;
+      const byId = id => document.getElementById(id);
+      if (byId('group-normal'))  byId('group-normal').style.display  = (val === 'normal')    ? 'block' : 'none';
+      if (byId('group-uniform')) byId('group-uniform').style.display = (val === 'uniform')   ? 'block' : 'none';
+      if (byId('group-trunc'))   byId('group-trunc').style.display   = (val === 'truncnorm') ? 'block' : 'none';
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+      const sel = document.getElementById('dist');
+      if (sel) onDistChange(sel);
+    });
+  </script>
+</body>
+</html>

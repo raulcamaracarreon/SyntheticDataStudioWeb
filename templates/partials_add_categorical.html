@@ -1,0 +1,21 @@
+<div class="card">
+  <div class="card-header">Agregar variable categórica</div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('add_categorical') }}" class="vstack gap-2">
+      <div>
+        <label class="form-label">Nombre</label>
+        <input name="name_cat" class="form-control" placeholder="ej. segmento">
+      </div>
+      <div>
+        <label class="form-label">Categorías (coma)</label>
+        <input name="categories" class="form-control" placeholder="A, B, C">
+      </div>
+      <div>
+        <label class="form-label">Probabilidades (coma, opcional)</label>
+        <input name="probs" class="form-control" placeholder="0.5, 0.3, 0.2">
+        <div class="form-text">Se normaliza si no suma 1. Vacío = uniforme.</div>
+      </div>
+      <button class="btn btn-primary w-100">Agregar categórica</button>
+    </form>
+  </div>
+</div>

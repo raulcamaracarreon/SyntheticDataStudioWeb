@@ -1,0 +1,344 @@
+<div class="card">
+  <div class="card-header">Agregar variable continua</div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('add_continuous') }}" class="vstack gap-3" data-use-copula="{{ 'true' if schema.use_copula else 'false' }}">
+
+      <div>
+        <label class="form-label">Nombre</label>
+        <input name="name" class="form-control" placeholder="ej. precio" required>
+      </div>
+
+      <div>
+        <label class="form-label">Distribución</label>
+        <select id="dist" name="dist" class="form-select" onchange="onDistChange(this)">
+          <!-- básicas -->
+          <option value="normal">Normal (μ, σ)</option>
+          <option value="uniform">Uniforme (min, max)</option>
+          <option value="truncnorm">Normal truncada (min, max, μ, σ)</option>
+          <option value="lognormal">Lognormal (μ_log, σ_log)</option>
+          <option value="gamma">Gamma (shape k, scale θ)</option>
+          <!-- nuevas continuas -->
+          <option value="exponential">Exponencial (rate λ)</option>
+          <option value="weibull">Weibull (shape k, scale λ)</option>
+          <option value="beta">Beta(0–1) (α, β)</option>
+          <option value="triangular">Triangular (min, mode, max)</option>
+          <option value="student_t">Student-t (df)</option>
+          <option value="chisquare">Chi-cuadrado (df)</option>
+          <option value="pareto">Pareto (α, xₘ)</option>
+          <!-- opcionales discretas (se generan como float; si decimals=0 quedan enteros) -->
+          <option value="poisson" id="opt-poisson">Poisson (λ)</option>
+          <option value="binomial" id="opt-binomial">Binomial (n, p)</option>
+        </select>
+        <div id="copula-warning" class="alert alert-warning mt-2" style="display:none;">
+          <small><strong>⚠️ Advertencia:</strong> Poisson y Binomial no son compatibles con la cópula gaussiana. Desactiva "Usar correlación" en las opciones generales para usar estas distribuciones.</small>
+        </div>
+      </div>
+
+      <!-- Normal -->
+      <div id="group-normal">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">μ (media)</label>
+            <input type="number" step="any" class="form-control" name="mu" value="0">
+          </div>
+          <div class="col-6">
+            <label class="form-label">σ (desv.)</label>
+            <input type="number" step="any" class="form-control" name="sigma" value="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Uniforme -->
+      <div id="group-uniform" style="display:none">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">min</label>
+            <input type="number" step="any" class="form-control" name="low" value="0">
+          </div>
+          <div class="col-6">
+            <label class="form-label">max</label>
+            <input type="number" step="any" class="form-control" name="high" value="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Truncada -->
+      <div id="group-trunc" style="display:none">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">min</label>
+            <input type="number" step="any" class="form-control" name="low_t" value="0">
+          </div>
+          <div class="col-6">
+            <label class="form-label">max</label>
+            <input type="number" step="any" class="form-control" name="high_t" value="1">
+          </div>
+          <div class="col-6">
+            <label class="form-label">μ</label>
+            <input type="number" step="any" class="form-control" name="mu_t" value="0.5">
+          </div>
+          <div class="col-6">
+            <label class="form-label">σ</label>
+            <input type="number" step="any" class="form-control" name="sigma_t" value="0.2">
+          </div>
+        </div>
+      </div>
+
+      <!-- Lognormal -->
+      <div id="group-lognormal" style="display:none">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">μ_log</label>
+            <input type="number" step="any" class="form-control" name="mu_log" value="0">
+          </div>
+          <div class="col-6">
+            <label class="form-label">σ_log</label>
+            <input type="number" step="any" class="form-control" name="sigma_log" value="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Gamma -->
+      <div id="group-gamma" style="display:none">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">shape k</label>
+            <input type="number" step="any" class="form-control" name="shape_k" value="2">
+          </div>
+          <div class="col-6">
+            <label class="form-label">scale θ</label>
+            <input type="number" step="any" class="form-control" name="scale_theta" value="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Exponencial -->
+      <div id="group-exponential" style="display:none">
+        <label class="form-label">rate λ</label>
+        <input type="number" step="any" class="form-control" name="rate" value="1">
+      </div>
+
+      <!-- Weibull -->
+      <div id="group-weibull" style="display:none">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">shape k</label>
+            <input type="number" step="any" class="form-control" name="shape_k" value="1.5">
+          </div>
+          <div class="col-6">
+            <label class="form-label">scale λ</label>
+            <input type="number" step="any" class="form-control" name="scale_lambda" value="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Beta -->
+      <div id="group-beta" style="display:none">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">α</label>
+            <input type="number" step="any" class="form-control" name="alpha" value="2">
+          </div>
+          <div class="col-6">
+            <label class="form-label">β</label>
+            <input type="number" step="any" class="form-control" name="beta" value="2">
+          </div>
+        </div>
+      </div>
+
+      <!-- Triangular -->
+      <div id="group-triangular" style="display:none">
+        <div class="row g-2">
+          <div class="col-4">
+            <label class="form-label">min</label>
+            <input type="number" step="any" class="form-control" name="low_tri" value="0">
+          </div>
+          <div class="col-4">
+            <label class="form-label">mode</label>
+            <input type="number" step="any" class="form-control" name="mode" value="0.5">
+          </div>
+          <div class="col-4">
+            <label class="form-label">max</label>
+            <input type="number" step="any" class="form-control" name="high_tri" value="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Student-t -->
+      <div id="group-student_t" style="display:none">
+        <label class="form-label">df</label>
+        <input type="number" step="any" class="form-control" name="df" value="5">
+      </div>
+
+      <!-- Chi-cuadrado -->
+      <div id="group-chisquare" style="display:none">
+        <label class="form-label">df</label>
+        <input type="number" step="any" class="form-control" name="df" value="4">
+      </div>
+
+      <!-- Pareto -->
+      <div id="group-pareto" style="display:none">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">α</label>
+            <input type="number" step="any" class="form-control" name="alpha" value="3">
+          </div>
+          <div class="col-6">
+            <label class="form-label">xₘ</label>
+            <input type="number" step="any" class="form-control" name="xm" value="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Poisson -->
+      <div id="group-poisson" style="display:none">
+        <label class="form-label">λ</label>
+        <input type="number" step="any" class="form-control" name="lambda" value="3">
+      </div>
+
+      <!-- Binomial -->
+      <div id="group-binomial" style="display:none">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">n</label>
+            <input type="number" step="1" class="form-control" name="n" value="10">
+          </div>
+          <div class="col-6">
+            <label class="form-label">p (0–1)</label>
+            <input type="number" step="any" class="form-control" name="p" value="0.5">
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Opciones extra -->
+      <div class="row g-2">
+        <div class="col-12 form-check">
+          <input class="form-check-input" type="checkbox" id="no_negative" name="no_negative">
+          <label class="form-check-label" for="no_negative">No permitir negativos</label>
+        </div>
+
+        <div class="col-12 form-check">
+          <input class="form-check-input" type="checkbox" id="enforce_minmax" name="enforce_minmax" onchange="toggleMinMaxFields(this)">
+          <label class="form-check-label" for="enforce_minmax">Forzar min/max (clip)</label>
+        </div>
+
+        <div class="col-6">
+          <label class="form-label">min (opcional)</label>
+          <input type="number" step="any" class="form-control" name="min_clip" placeholder="ej. 0" disabled>
+        </div>
+        <div class="col-6">
+          <label class="form-label">max (opcional)</label>
+          <input type="number" step="any" class="form-control" name="max_clip" placeholder="ej. 120" disabled>
+        </div>
+      </div>
+
+      <div class="row g-2">
+        <div class="col-4">
+          <label class="form-label">Decimales (0–7)</label>
+          <input type="number" min="0" max="7" class="form-control" name="decimals" value="2">
+          <div class="form-text">0 = enteros (Int64)</div>
+        </div>
+        <div class="col-4">
+          <label class="form-label">Faltantes % (0–1)</label>
+          <input type="number" step="0.001" min="0" max="1" class="form-control" name="missing_pct" value="0">
+        </div>
+        <div class="col-4">
+          <label class="form-label">Transform</label>
+          <select class="form-select" name="transform">
+            <option value="">(ninguna)</option>
+            <option value="ceil">ceil</option>
+            <option value="floor">floor</option>
+            <option value="log1p">log1p</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row g-2">
+        <div class="col-4">
+          <label class="form-label">Outliers % (0–1)</label>
+          <input type="number" step="0.001" min="0" max="1" class="form-control" name="outlier_pct" value="0">
+        </div>
+        <div class="col-4">
+          <label class="form-label">Severidad (×)</label>
+          <input type="number" step="0.1" min="0" class="form-control" name="outlier_mult" value="0">
+        </div>
+        <div class="col-4 form-check d-flex align-items-end">
+          <input class="form-check-input" type="checkbox" id="keep_outliers" name="keep_outliers" checked>
+          <label for="keep_outliers" class="form-check-label ms-2">Conservar aunque haya min/max</label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary w-100 mt-2">Agregar continua</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const GROUPS = [
+    'group-normal','group-uniform','group-trunc','group-lognormal','group-gamma',
+    'group-exponential','group-weibull','group-beta','group-triangular',
+    'group-student_t','group-chisquare','group-pareto','group-poisson','group-binomial'
+  ];
+  
+  // Detectar si la cópula está activa desde el atributo data
+  const form = document.querySelector('form[data-use-copula]');
+  const useCopula = form ? form.getAttribute('data-use-copula') === 'true' : false;
+  
+  function onDistChange(sel) {
+    const val = sel.value;
+    GROUPS.forEach(id => document.getElementById(id).style.display = 'none');
+    const g = document.getElementById('group-' + val.replaceAll('_','_'));
+    if (g) g.style.display = 'block';
+    
+    // Mostrar advertencia si se selecciona Poisson/Binomial con cópula activa
+    const warning = document.getElementById('copula-warning');
+    if (warning && useCopula && (val === 'poisson' || val === 'binomial')) {
+      warning.style.display = 'block';
+    } else if (warning) {
+      warning.style.display = 'none';
+    }
+  }
+  
+  function toggleMinMaxFields(cb) {
+    const form = cb.closest('form');
+    const minF = form.querySelector('input[name="min_clip"]');
+    const maxF = form.querySelector('input[name="max_clip"]');
+    const enabled = cb.checked;
+    if (minF) minF.disabled = !enabled;
+    if (maxF) maxF.disabled = !enabled;
+  }
+  
+  function updateCopulaRestrictions() {
+    const poissonOpt = document.getElementById('opt-poisson');
+    const binomialOpt = document.getElementById('opt-binomial');
+    const distSel = document.getElementById('dist');
+    
+    if (useCopula) {
+      // Deshabilitar opciones de Poisson y Binomial
+      if (poissonOpt) poissonOpt.disabled = true;
+      if (binomialOpt) binomialOpt.disabled = true;
+      
+      // Si actualmente está seleccionada una distribución incompatible, cambiar a normal
+      if (distSel && (distSel.value === 'poisson' || distSel.value === 'binomial')) {
+        distSel.value = 'normal';
+        onDistChange(distSel);
+      }
+    } else {
+      // Habilitar todas las opciones
+      if (poissonOpt) poissonOpt.disabled = false;
+      if (binomialOpt) binomialOpt.disabled = false;
+    }
+  }
+  
+  window.addEventListener('DOMContentLoaded', () => {
+    const distSel = document.getElementById('dist');
+    if (distSel) onDistChange(distSel);
+    const clipCb = document.getElementById('enforce_minmax');
+    if (clipCb) toggleMinMaxFields(clipCb);
+    
+    // Aplicar restricciones de cópula al cargar
+    updateCopulaRestrictions();
+  });
+</script>

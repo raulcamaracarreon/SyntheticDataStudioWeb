@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Preview</h2>
+
+<!-- HISTOGRAMAS (continuas) -->
+<div class="mb-3">
+  <strong>Histogramas (continuas):</strong>
+  {% if cont_names %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mt-1">
+      {% for n in cont_names %}
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-header py-1">{{ n or "(sin nombre)" }}</div>
+            <img
+              class="card-img-bottom"
+              src="{{ url_for('hist_png', var=n, _=loop.index) }}"
+              alt="Histograma de {{ n }}"
+              loading="lazy"
+              style="max-height: 280px; object-fit: contain;"
+            >
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-muted">No hay variables continuas.</div>
+  {% endif %}
+</div>
+
+<!-- BARRAS (categóricas / discretas) -->
+<div class="mb-3">
+  <strong>Gráficas de barras (categóricas / discretas):</strong>
+  {% if bar_names %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3 mt-1">
+      {% for n in bar_names %}
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-header py-1">{{ n or "(sin nombre)" }}</div>
+            <img
+              class="card-img-bottom"
+              src="{{ url_for('bar_png', var=n, _=loop.index) }}"
+              alt="Barras de {{ n }}"
+              loading="lazy"
+              style="max-height: 280px; object-fit: contain;"
+            >
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-muted">No hay variables categóricas o discretas.</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-header">Primeras 50 filas</div>
+  <div class="card-body">
+    {{ table|safe }}
+  </div>
+</div>
+{% endblock %}

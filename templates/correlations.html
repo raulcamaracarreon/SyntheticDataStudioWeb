@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Correlaciones (Cópula Gaussiana)</h2>
+
+{% if not has_scipy %}
+  <div class="alert alert-warning">
+    Para usar correlaciones instala SciPy: <code>pip install scipy</code>
+  </div>
+{% endif %}
+
+<form method="post" action="{{ url_for('correlations') }}">
+  <div class="table-responsive">
+    <table class="table table-bordered table-sm align-middle text-center">
+      <thead>
+        <tr>
+          <th></th>
+          {% for n in names %}<th class="mono">{{ n }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in M %}
+          {% set i = loop.index0 %}
+          <tr>
+            <th class="mono text-nowrap">{{ names[i] }}</th>
+            {% for val in row %}
+              {% set j = loop.index0 %}
+              <td>
+                {% if i == j %}
+                  <input class="form-control form-control-sm text-center" value="1.0" disabled>
+                {% elif i > j %}
+                  <!-- triángulo inferior: solo lectura -->
+                  <input class="form-control form-control-sm text-center" value="{{ '{:.6f}'.format(val) }}" disabled>
+                {% else %}
+                  <!-- triángulo superior: editable -->
+                  <input
+                    name="c_{{ i }}_{{ j }}"
+                    class="form-control form-control-sm text-center"
+                    type="number" step="any" min="-1" max="1"
+                    value="{{ '{:.6f}'.format(val) }}"
+                  >
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary">Guardar matriz</button>
+    <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

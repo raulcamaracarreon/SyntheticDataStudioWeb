@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Editar variable continua</h2>
+<form method="post" action="{{ url_for('update_continuous', i=i) }}" class="vstack gap-3" data-use-copula="{{ 'true' if schema.use_copula else 'false' }}">
+
+  <div class="row g-2">
+    <div class="col-sm-6">
+      <label class="form-label">Nombre</label>
+      <input name="name" class="form-control" value="{{ spec.name }}">
+    </div>
+    <div class="col-sm-6">
+      <label class="form-label">Distribución</label>
+      <select id="dist" name="dist" class="form-select" onchange="onDistChange(this)">
+        <option value="normal"     {{ 'selected' if spec.dist=='normal' else '' }}>Normal</option>
+        <option value="uniform"    {{ 'selected' if spec.dist=='uniform' else '' }}>Uniforme</option>
+        <option value="truncnorm"  {{ 'selected' if spec.dist=='truncnorm' else '' }}>Normal truncada</option>
+        <option value="lognormal"  {{ 'selected' if spec.dist=='lognormal' else '' }}>Lognormal</option>
+        <option value="gamma"      {{ 'selected' if spec.dist=='gamma' else '' }}>Gamma</option>
+        <option value="exponential"{{ 'selected' if spec.dist=='exponential' else '' }}>Exponencial</option>
+        <option value="weibull"    {{ 'selected' if spec.dist=='weibull' else '' }}>Weibull</option>
+        <option value="beta"       {{ 'selected' if spec.dist=='beta' else '' }}>Beta(0–1)</option>
+        <option value="triangular" {{ 'selected' if spec.dist=='triangular' else '' }}>Triangular</option>
+        <option value="student_t"  {{ 'selected' if spec.dist=='student_t' else '' }}>Student-t</option>
+        <option value="chisquare"  {{ 'selected' if spec.dist=='chisquare' else '' }}>Chi-cuadrado</option>
+        <option value="pareto"     {{ 'selected' if spec.dist=='pareto' else '' }}>Pareto</option>
+        <option value="poisson"    {{ 'selected' if spec.dist=='poisson' else '' }} id="opt-poisson">Poisson</option>
+        <option value="binomial"   {{ 'selected' if spec.dist=='binomial' else '' }} id="opt-binomial">Binomial</option>
+      </select>
+      <div id="copula-warning" class="alert alert-warning mt-2" style="display:none;">
+        <small><strong>⚠️ Advertencia:</strong> Poisson y Binomial no son compatibles con la cópula gaussiana. Desactiva "Usar correlación" en las opciones generales para usar estas distribuciones.</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Normal -->
+  <div id="group-normal" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label">μ</label>
+        <input type="number" step="any" class="form-control" name="mu" value="{{ spec.params.get('mu', 0) }}">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">σ</label>
+        <input type="number" step="any" class="form-control" name="sigma" value="{{ spec.params.get('sigma', 1) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Uniforme -->
+  <div id="group-uniform" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label">min</label>
+        <input type="number" step="any" class="form-control" name="low" value="{{ spec.params.get('low', 0) }}">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">max</label>
+        <input type="number" step="any" class="form-control" name="high" value="{{ spec.params.get('high', 1) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Truncada -->
+  <div id="group-trunc" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-3">
+        <label class="form-label">min</label>
+        <input type="number" step="any" class="form-control" name="low_t" value="{{ spec.params.get('low', 0) }}">
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label">max</label>
+        <input type="number" step="any" class="form-control" name="high_t" value="{{ spec.params.get('high', 1) }}">
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label">μ</label>
+        <input type="number" step="any" class="form-control" name="mu_t" value="{{ spec.params.get('mu', 0.5) }}">
+      </div>
+      <div class="col-sm-3">
+        <label class="form-label">σ</label>
+        <input type="number" step="any" class="form-control" name="sigma_t" value="{{ spec.params.get('sigma', 0.2) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Lognormal -->
+  <div id="group-lognormal" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label">μ_log</label>
+        <input type="number" step="any" class="form-control" name="mu_log" value="{{ spec.params.get('mu_log', 0) }}">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">σ_log</label>
+        <input type="number" step="any" class="form-control" name="sigma_log" value="{{ spec.params.get('sigma_log', 1) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Gamma -->
+  <div id="group-gamma" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label">shape k</label>
+        <input type="number" step="any" class="form-control" name="shape_k" value="{{ spec.params.get('shape_k', 2) }}">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">scale θ</label>
+        <input type="number" step="any" class="form-control" name="scale_theta" value="{{ spec.params.get('scale_theta', 1) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Exponencial -->
+  <div id="group-exponential" style="display:none">
+    <label class="form-label">rate λ</label>
+    <input type="number" step="any" class="form-control" name="rate" value="{{ spec.params.get('rate', 1) }}">
+  </div>
+
+  <!-- Weibull -->
+  <div id="group-weibull" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label">shape k</label>
+        <input type="number" step="any" class="form-control" name="shape_k" value="{{ spec.params.get('shape_k', 1.5) }}">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">scale λ</label>
+        <input type="number" step="any" class="form-control" name="scale_lambda" value="{{ spec.params.get('scale_lambda', 1) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Beta -->
+  <div id="group-beta" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label">α</label>
+        <input type="number" step="any" class="form-control" name="alpha" value="{{ spec.params.get('alpha', 2) }}">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">β</label>
+        <input type="number" step="any" class="form-control" name="beta" value="{{ spec.params.get('beta', 2) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Triangular -->
+  <div id="group-triangular" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-4">
+        <label class="form-label">min</label>
+        <input type="number" step="any" class="form-control" name="low_tri" value="{{ spec.params.get('low', 0) }}">
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">mode</label>
+        <input type="number" step="any" class="form-control" name="mode" value="{{ spec.params.get('mode', 0.5) }}">
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">max</label>
+        <input type="number" step="any" class="form-control" name="high_tri" value="{{ spec.params.get('high', 1) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Student-t -->
+  <div id="group-student_t" style="display:none">
+    <label class="form-label">df</label>
+    <input type="number" step="any" class="form-control" name="df" value="{{ spec.params.get('df', 5) }}">
+  </div>
+
+  <!-- Chi-cuadrado -->
+  <div id="group-chisquare" style="display:none">
+    <label class="form-label">df</label>
+    <input type="number" step="any" class="form-control" name="df" value="{{ spec.params.get('df', 4) }}">
+  </div>
+
+  <!-- Pareto -->
+  <div id="group-pareto" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label">α</label>
+        <input type="number" step="any" class="form-control" name="alpha" value="{{ spec.params.get('alpha', 3) }}">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">xₘ</label>
+        <input type="number" step="any" class="form-control" name="xm" value="{{ spec.params.get('xm', 1) }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Poisson -->
+  <div id="group-poisson" style="display:none">
+    <label class="form-label">λ</label>
+    <input type="number" step="any" class="form-control" name="lambda" value="{{ spec.params.get('lambda', 3) }}">
+  </div>
+
+  <!-- Binomial -->
+  <div id="group-binomial" style="display:none">
+    <div class="row g-2">
+      <div class="col-sm-6">
+        <label class="form-label">n</label>
+        <input type="number" step="1" class="form-control" name="n" value="{{ spec.params.get('n', 10) }}">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">p (0–1)</label>
+        <input type="number" step="any" class="form-control" name="p" value="{{ spec.params.get('p', 0.5) }}">
+      </div>
+    </div>
+  </div>
+
+  <hr>
+  <!-- Opciones extra -->
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" id="no_negative" name="no_negative"
+           {% if spec.params.get('no_negative') %}checked{% endif %}>
+    <label class="form-check-label" for="no_negative">No permitir negativos</label>
+  </div>
+
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" id="enforce_minmax" name="enforce_minmax"
+           {% if spec.params.get('enforce_minmax') %}checked{% endif %} onchange="toggleMinMaxFields(this)">
+    <label class="form-check-label" for="enforce_minmax">Forzar min/max (clip)</label>
+  </div>
+
+  <div class="row g-2">
+    <div class="col-sm-6">
+      <label class="form-label">min (opcional)</label>
+      <input type="number" step="any" class="form-control" name="min_clip"
+             value="{{ spec.params.get('min_clip', '') }}"
+             {% if not spec.params.get('enforce_minmax') %}disabled{% endif %}>
+    </div>
+    <div class="col-sm-6">
+      <label class="form-label">max (opcional)</label>
+      <input type="number" step="any" class="form-control" name="max_clip"
+             value="{{ spec.params.get('max_clip', '') }}"
+             {% if not spec.params.get('enforce_minmax') %}disabled{% endif %}>
+    </div>
+  </div>
+
+  <div class="row g-2">
+    <div class="col-sm-4">
+      <label class="form-label">Decimales (0–7)</label>
+      <input type="number" min="0" max="7" class="form-control" name="decimals"
+             value="{{ spec.params.get('decimals', '') }}">
+      <div class="form-text">0 = valores discretos (enteros)</div>
+    </div>
+    <div class="col-sm-4">
+      <label class="form-label">Faltantes % (0–1)</label>
+      <input type="number" step="0.001" min="0" max="1" class="form-control" name="missing_pct"
+             value="{{ spec.params.get('missing_pct', 0) }}">
+    </div>
+    <div class="col-sm-4">
+      <label class="form-label">Transform</label>
+      <select class="form-select" name="transform">
+        <option value=""       {{ 'selected' if spec.params.get('transform','')=='' else '' }}>(ninguna)</option>
+        <option value="ceil"   {{ 'selected' if spec.params.get('transform')=='ceil' else '' }}>ceil</option>
+        <option value="floor"  {{ 'selected' if spec.params.get('transform')=='floor' else '' }}>floor</option>
+        <option value="log1p"  {{ 'selected' if spec.params.get('transform')=='log1p' else '' }}>log1p</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row g-2">
+    <div class="col-sm-4">
+      <label class="form-label">Outliers % (0–1)</label>
+      <input type="number" step="0.001" min="0" max="1" class="form-control" name="outlier_pct"
+             value="{{ spec.params.get('outlier_pct', 0) }}">
+    </div>
+    <div class="col-sm-4">
+      <label class="form-label">Severidad (×)</label>
+      <input type="number" step="0.1" min="0" class="form-control" name="outlier_mult"
+             value="{{ spec.params.get('outlier_mult', 0) }}">
+    </div>
+    <div class="col-sm-4 form-check d-flex align-items-end">
+      <input class="form-check-input" type="checkbox" id="keep_outliers" name="keep_outliers"
+             {% if spec.params.get('keep_outliers', True) %}checked{% endif %}>
+      <label for="keep_outliers" class="form-check-label ms-2">Conservar aunque haya min/max</label>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary">Guardar</button>
+    <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancelar</a>
+  </div>
+</form>
+
+<script>
+  const GROUPS = [
+    'group-normal','group-uniform','group-trunc','group-lognormal','group-gamma',
+    'group-exponential','group-weibull','group-beta','group-triangular',
+    'group-student_t','group-chisquare','group-pareto','group-poisson','group-binomial'
+  ];
+  
+  // Detectar si la cópula está activa desde el atributo data
+  const form = document.querySelector('form[data-use-copula]');
+  const useCopula = form ? form.getAttribute('data-use-copula') === 'true' : false;
+  
+  function onDistChange(sel) {
+    const val = sel.value;
+    GROUPS.forEach(id => document.getElementById(id).style.display = 'none');
+    const g = document.getElementById('group-' + val);
+    if (g) g.style.display = 'block';
+    
+    // Mostrar advertencia si se selecciona Poisson/Binomial con cópula activa
+    const warning = document.getElementById('copula-warning');
+    if (warning && useCopula && (val === 'poisson' || val === 'binomial')) {
+      warning.style.display = 'block';
+    } else if (warning) {
+      warning.style.display = 'none';
+    }
+  }
+  
+  function toggleMinMaxFields(cb) {
+    const form = cb.closest('form');
+    const minF = form.querySelector('input[name="min_clip"]');
+    const maxF = form.querySelector('input[name="max_clip"]');
+    const enabled = cb.checked;
+    if (minF) minF.disabled = !enabled;
+    if (maxF) maxF.disabled = !enabled;
+  }
+  
+  function updateCopulaRestrictions() {
+    const poissonOpt = document.getElementById('opt-poisson');
+    const binomialOpt = document.getElementById('opt-binomial');
+    const distSel = document.getElementById('dist');
+    
+    if (useCopula) {
+      // Deshabilitar opciones de Poisson y Binomial
+      if (poissonOpt) poissonOpt.disabled = true;
+      if (binomialOpt) binomialOpt.disabled = true;
+      
+      // Si actualmente está seleccionada una distribución incompatible, cambiar a normal
+      if (distSel && (distSel.value === 'poisson' || distSel.value === 'binomial')) {
+        distSel.value = 'normal';
+        onDistChange(distSel);
+      }
+    } else {
+      // Habilitar todas las opciones
+      if (poissonOpt) poissonOpt.disabled = false;
+      if (binomialOpt) binomialOpt.disabled = false;
+    }
+  }
+  
+  window.addEventListener('DOMContentLoaded', () => {
+    onDistChange(document.getElementById('dist'));
+    toggleMinMaxFields(document.getElementById('enforce_minmax'));
+    
+    // Aplicar restricciones de cópula al cargar
+    updateCopulaRestrictions();
+  });
+</script>
+{% endblock %}

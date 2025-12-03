@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Editar variable categórica</h2>
+<form method="post" action="{{ url_for('update_categorical', i=i) }}" class="vstack gap-3">
+  <div>
+    <label class="form-label">Nombre</label>
+    <input name="name_cat" class="form-control" value="{{ spec.name }}">
+  </div>
+  <div>
+    <label class="form-label">Categorías (coma)</label>
+    <input name="categories" class="form-control" value="{{ spec.categories | join(', ') }}">
+  </div>
+  <div>
+    <label class="form-label">Probabilidades (coma, opcional)</label>
+    <input name="probs" class="form-control" value="{{ spec.probs | join(', ') }}">
+    <div class="form-text">Se normaliza si no suma 1. Dejar vacío = uniforme.</div>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary">Guardar</button>
+    <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

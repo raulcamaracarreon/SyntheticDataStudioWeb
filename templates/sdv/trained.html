@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">Modelo SDV entrenado</h2>
+<div class="small text-muted mb-2">
+  ID: <code>{{ model_id }}</code> • Filas reales leídas: {{ n_real }}
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a class="btn btn-outline-primary" href="{{ url_for('sdv_preview', model_id=model_id) }}">
+    Actualizar preview
+  </a>
+
+  <a class="btn btn-primary" href="{{ url_for('sdv_sample', model_id=model_id, n=1000) }}">
+    Descargar 1000
+  </a>
+
+  <a class="btn btn-outline-secondary" href="{{ url_for('sdv_export_metadata', model_id=model_id) }}">
+    Exportar metadatos
+  </a>
+
+  <!-- Recalcular calidad: siempre pasa model_id -->
+  <a class="btn btn-outline-info" id="btn-metrics-link" href="{{ url_for('sdv_metrics', model_id=model_id) }}">
+    Recalcular calidad
+  </a>
+
+  <a class="btn btn-outline-dark" href="{{ url_for('index') }}">
+    Volver (schema-driven)
+  </a>
+</div>
+
+{% if global_score is not none %}
+  <div class="alert alert-info">
+    Puntaje de calidad (rápido): <b>{{ "%.3f"|format(global_score) }}</b>
+  </div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">Preview de datos sintéticos (primeras 50 filas)</div>
+  <div class="card-body table-responsive">
+    {{ preview_syn|safe }}
+  </div>
+</div>
+
+<script>
+(function () {
+  const a = document.getElementById("btn-metrics-link");
+  if (!a) return;
+
+  // Progressive enhancement: hacemos fetch para mostrar un alert con el score.
+  a.addEventListener("click", async function (ev) {
+    ev.preventDefault();
+    const url = a.getAttribute("href");
+    try {
+      const r = await fetch(url, { method: "GET" });
+      const data = await r.json();
+      if (data && data.ok) {
+        alert("Puntaje de calidad: " + Number(data.score).toFixed(3));
+      } else {
+        alert("No fue posible calcular la métrica: " + (data && data.error ? data.error : "Error desconocido"));
+      }
+    } catch (err) {
+      // Si algo falla, redirigimos a la URL (fallback a GET tradicional)
+      window.location.href = url;
+    }
+  });
+})();
+</script>
+{% endblock %}
